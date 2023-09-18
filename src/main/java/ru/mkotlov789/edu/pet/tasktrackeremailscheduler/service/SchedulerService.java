@@ -15,7 +15,6 @@ import ru.mkotlov789.edu.pet.tasktrackeremailscheduler.repository.UserRepository
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 @Slf4j
 @Service
@@ -31,21 +30,22 @@ public class SchedulerService {
     //Added for testing purposes
     @PostConstruct
     public void sendDailyTaskNotificationsOnStartup() {
-        sendKafkaEmailMessage();
+        sendDailyTaskNotifications();
     }
 
     @Scheduled(cron = "0 0 0 * * ?")
-    public void sendKafkaEmailMessage() {
+    public void sendDailyTaskNotifications() {
 
         List<User> users = userRepository.findAll();
         for (User user : users) {
-            List<Task> userTasks = taskRepository.findByUserId(user.getId());
+            List<Task> completedTasks = taskRepository.findByUserId(user.getId());
 
             Instant twentyFourHoursAgo = Instant.now().minus(Duration.ofHours(24));
-            userTasks.removeIf(task -> task.getUpdatedAt().toInstant().isBefore(twentyFourHoursAgo));
+            completedTasks.removeIf(task -> (task.getUpdatedAt().toInstant().isBefore(twentyFourHoursAgo)
+                    ||!task.isCompleted()));
 
-            int uncompletedTasksCount = countUncompletedTasks(userTasks);
-            String message = buildNotificationMessage(user.getUsername(), userTasks, uncompletedTasksCount);
+            int uncompletedTasksCount = countUncompletedTasks(completedTasks);
+            String message = buildNotificationMessage(user.getUsername(), completedTasks, uncompletedTasksCount);
             emailService.sendEmail(user.getEmail(),message);
         }
     }
@@ -61,14 +61,14 @@ public class SchedulerService {
         return uncompletedCount;
     }
 
-    private String buildNotificationMessage(String username, List<Task> tasks, int uncompletedTasksCount) {
+    private String buildNotificationMessage(String username, List<Task> completedTasks, int uncompletedTasksCount) {
         StringBuilder messageBuilder = new StringBuilder();
         messageBuilder.append("Hello, ").append(username).append("!\n");
 
-        if (!tasks.isEmpty()) {
+        if (!completedTasks.isEmpty()) {
             messageBuilder.append("Today, you completed the following tasks:\n");
 
-            for (Task task : tasks) {
+            for (Task task : completedTasks) {
                 messageBuilder.append("- ").append(task.getTitle()).append("\n");
             }
         } else {
@@ -76,13 +76,10 @@ public class SchedulerService {
         }
         if (uncompletedTasksCount > 0) {
             messageBuilder.append("You have ").append(uncompletedTasksCount).append(" uncompleted tasks.");
-        } else if ( uncompletedTasksCount > 0 && !tasks.isEmpty()) {
+        } else if ( uncompletedTasksCount > 0 && !completedTasks.isEmpty()) {
             messageBuilder.append("Congratulations! All tasks are completed.");
         }
 
         return messageBuilder.toString();
     }
-
-
-
 }
