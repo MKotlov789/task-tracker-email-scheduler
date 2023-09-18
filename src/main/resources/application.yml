@@ -22,7 +22,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: update
-    #      update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5Dialect
