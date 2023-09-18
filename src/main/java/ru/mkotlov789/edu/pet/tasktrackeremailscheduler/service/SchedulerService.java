@@ -16,6 +16,10 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+/**
+ * SchedulerService is a service class responsible for sending daily task notifications to users.
+ * It uses Spring's scheduling capabilities to send notifications at a specified time each day.
+ */
 @Slf4j
 @Service
 public class SchedulerService {
@@ -27,12 +31,20 @@ public class SchedulerService {
     @Autowired
     private EmailService emailService;
 
-    //Added for testing purposes
+    /**
+     * This method is called after the bean is constructed and is used for testing purposes.
+     * It sends daily task notifications immediately upon startup.
+     */
     @PostConstruct
     public void sendDailyTaskNotificationsOnStartup() {
         sendDailyTaskNotifications();
     }
 
+
+    /**
+     * Scheduled method that sends daily task notifications to all users at a specified time (midnight by default).
+     * It retrieves user data, filters and processes completed tasks within the last 24 hours, and sends email notifications.
+     */
     @Scheduled(cron = "0 0 0 * * ?")
     public void sendDailyTaskNotifications() {
 
