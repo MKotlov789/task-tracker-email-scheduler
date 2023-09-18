@@ -1,0 +1,29 @@
+spring:
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        acks: 1
+        spring:
+          json:
+            add:
+              type:
+                headers: false
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://db:3306/task_manager_db
+    username: root
+    password: root
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5Dialect
+
+config:
+  activate:
+    on-profile: deploy
